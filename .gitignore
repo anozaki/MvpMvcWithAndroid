@@ -11,6 +11,9 @@
 .classpath
 .project
 
+project.properties
+proguard-project.txt
+
 # generated files
 .settings/
 bin/
