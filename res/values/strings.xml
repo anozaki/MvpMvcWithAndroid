@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">MVP and MVC sample application. Click on MVC button to check out MVC version or MVP to check out the MVP version of the calculator.</string>
+    <string name="app_name">MVC/MVP Sample</string>
+
+    <string name="mvp">MVP</string>
+    <string name="mvc">MVC</string>
+</resources>
