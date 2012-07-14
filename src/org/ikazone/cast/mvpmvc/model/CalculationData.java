@@ -1,10 +1,23 @@
 package org.ikazone.cast.mvpmvc.model;
 
 import java.math.BigDecimal;
+import java.util.Observable;
 
 public class CalculationData {
+	
+	/**
+	 * Current calculation value.
+	 */
 	private BigDecimal value;
+	
+	/**
+	 * Current display value shown to user.
+	 */
 	private String displayValue;
+	
+	/**
+	 * Last operation performed on the value.
+	 */
 	private Operation lastOperation;
 
 	public CalculationData(BigDecimal value, String displayValue,

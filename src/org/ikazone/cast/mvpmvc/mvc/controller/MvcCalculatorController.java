@@ -2,31 +2,31 @@ package org.ikazone.cast.mvpmvc.mvc.controller;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.inject.Singleton;
 
 import org.ikazone.cast.mvpmvc.model.CalculationData;
 import org.ikazone.cast.mvpmvc.model.Operation;
-import org.ikazone.cast.mvpmvc.mvc.MvcCalculationDataChangeEvent;
-import org.ikazone.cast.mvpmvc.mvc.MvcCalculationDataChangeEvent.MvcCalculationDataChangeHandler;
+import org.ikazone.cast.mvpmvc.mvc.ActionEvent;
+import org.ikazone.cast.mvpmvc.mvc.ActionEvent.ActionHandler;
+import org.ikazone.cast.mvpmvc.mvc.DataChangeEvent;
+import org.ikazone.cast.mvpmvc.mvc.MvcEventConductor;
 
 @Singleton
-public class MvcCalculatorController {
+public class MvcCalculatorController implements ActionHandler {
 	private BigDecimal current = new BigDecimal(0);
+
+	public static String CalculatorContext = MvcCalculatorController.class
+			.getSimpleName() + "/CalculationUpdated";
 
 	private String number = "";
 	private String lastNumber = "";
 
 	private Operation lastOperation;
 	private boolean clearOperation;
-
-	private List<MvcCalculationDataChangeHandler> handlers = new ArrayList<MvcCalculationDataChangeHandler>();
-
-	public void addCalculationChangeHandler(
-			MvcCalculationDataChangeHandler handler) {
-		handlers.add(handler);
+	
+	public MvcCalculatorController() {
+		MvcEventConductor.getInstance().addActionHandler(this);
 	}
 
 	public void appendDecimal() {
@@ -39,14 +39,16 @@ public class MvcCalculatorController {
 			clearOperation = false;
 		}
 
-		MvcCalculationDataChangeEvent event = new MvcCalculationDataChangeEvent();
-		event.setCalculation(new CalculationData(current, number, null));
-		fireCalcuationChangeEvent(event);
+		DataChangeEvent event = new DataChangeEvent();
+		event.setDate(CalculatorContext, new CalculationData(current, number,
+				null));
+		MvcEventConductor.getInstance().fireDataChangeEvent(event);
 
 	}
 
 	public void appendNumber(int number) {
-		if (this.number.length() > 0 || (!this.number.equals("0") && number != 0)) {
+		if (this.number.length() > 0
+				|| (!this.number.equals("0") && number != 0)) {
 			this.number += number;
 		}
 
@@ -55,9 +57,10 @@ public class MvcCalculatorController {
 			clearOperation = false;
 		}
 
-		MvcCalculationDataChangeEvent event = new MvcCalculationDataChangeEvent();
-		event.setCalculation(new CalculationData(current, this.number, null));
-		fireCalcuationChangeEvent(event);
+		DataChangeEvent event = new DataChangeEvent();
+		event.setDate(CalculatorContext, new CalculationData(current,
+				this.number, null));
+		MvcEventConductor.getInstance().fireDataChangeEvent(event);
 	}
 
 	public void clear() {
@@ -66,9 +69,10 @@ public class MvcCalculatorController {
 		lastOperation = null;
 		clearOperation = false;
 
-		MvcCalculationDataChangeEvent event = new MvcCalculationDataChangeEvent();
-		event.setCalculation(new CalculationData(current, number, null));
-		fireCalcuationChangeEvent(event);
+		DataChangeEvent event = new DataChangeEvent();
+		event.setDate(CalculatorContext, new CalculationData(current, number,
+				null));
+		MvcEventConductor.getInstance().fireDataChangeEvent(event);
 	}
 
 	public void onCalculate(Operation operation) {
@@ -120,6 +124,10 @@ public class MvcCalculatorController {
 				case SUBTRACT:
 					current = current.subtract(n);
 					break;
+				case EQUAL:
+				default:
+					// don't do anything.
+					break;
 				}
 			} else {
 				/*
@@ -157,20 +165,25 @@ public class MvcCalculatorController {
 		lastNumber = number;
 		number = "";
 
-		MvcCalculationDataChangeEvent event = new MvcCalculationDataChangeEvent();
-		event.setCalculation(new CalculationData(current, current.toString(),
-				processedOperation));
-		fireCalcuationChangeEvent(event);
+		DataChangeEvent event = new DataChangeEvent();
+		event.setDate(CalculatorContext,
+				new CalculationData(current, current.toString(),
+						processedOperation));
+		MvcEventConductor.getInstance().fireDataChangeEvent(event);
 	}
 
-	public void removeCalculationChangeHandler(
-			MvcCalculationDataChangeHandler handler) {
-		handlers.remove(handler);
-	}
-
-	private void fireCalcuationChangeEvent(MvcCalculationDataChangeEvent event) {
-		for (MvcCalculationDataChangeHandler h : handlers) {
-			event.onFire(h);
+	@Override
+	public void onAction(ActionEvent event) {
+		String action = event.getAction();
+		if ("appendDecimal".equals(action)) {
+			appendDecimal();
+		} else if ("appendNumber".equals(action)) {
+			appendNumber((Integer) event.getData()[0]);
+		} else if ("operation".equals(action)) {
+			onCalculate((Operation) event.getData()[0]);
+		} else if ("clear".equals(action)) {
+			clear();
 		}
 	}
+
 }

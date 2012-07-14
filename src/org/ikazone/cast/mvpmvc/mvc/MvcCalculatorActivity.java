@@ -1,13 +1,10 @@
 package org.ikazone.cast.mvpmvc.mvc;
 
-import javax.inject.Inject;
-
 import org.ikazone.cast.mvpmvc.CalculatorButtonAdapter;
 import org.ikazone.cast.mvpmvc.R;
 import org.ikazone.cast.mvpmvc.model.CalculationData;
 import org.ikazone.cast.mvpmvc.model.Operation;
-import org.ikazone.cast.mvpmvc.mvc.MvcCalculationDataChangeEvent.MvcCalculationDataChangeHandler;
-import org.ikazone.cast.mvpmvc.mvc.controller.MvcCalculatorController;
+import org.ikazone.cast.mvpmvc.mvc.DataChangeEvent.DataChangeHandler;
 
 import roboguice.activity.RoboActivity;
 import roboguice.inject.InjectView;
@@ -25,8 +22,8 @@ import android.widget.TextView;
  * @author anozaki
  */
 public class MvcCalculatorActivity extends RoboActivity implements
-		MvcCalculationDataChangeHandler {
-
+		DataChangeHandler {
+	
 	private String buttons[] = { " ", " ", " ", "C", "1", "2", "3", "+", "4", "5",
 			"6", "-", "7", "8", "9", "*", ".", "0", "=", "/" };
 
@@ -37,13 +34,12 @@ public class MvcCalculatorActivity extends RoboActivity implements
 
 	@InjectView(R.id.calculationView)
 	TextView calculationView;
-
-	@Inject
-	MvcCalculatorController controller;
+	
+	MvcEventConductor conductor = MvcEventConductor.getInstance();
 
 	@Override
-	public void onCalculationChange(MvcCalculationDataChangeEvent event) {
-		CalculationData data = event.getCalculation();
+	public void onDataChange(DataChangeEvent event) {
+		CalculationData data = (CalculationData) event.getDate();
 		calculationView.setText(data.getDisplayValue());
 	}
 
@@ -61,29 +57,29 @@ public class MvcCalculatorActivity extends RoboActivity implements
 						char val = ((String) b.getTag()).charAt(0);
 
 						if (val >= '0' && val <= '9') {
-							controller.appendNumber(val - '0');
+							conductor.action("appendNumber", val - '0');
 						} else {
 							switch (val) {
 							case '.':
-								controller.appendDecimal();
+								conductor.action("appendDecimal");
 								break;
 							case '+':
-								controller.onCalculate(Operation.ADD);
+								conductor.action("operation", Operation.ADD);
 								break;
 							case '-':
-								controller.onCalculate(Operation.SUBTRACT);
+								conductor.action("operation", Operation.SUBTRACT);
 								break;
 							case '*':
-								controller.onCalculate(Operation.MULTIPLY);
+								conductor.action("operation", Operation.MULTIPLY);
 								break;
 							case '/':
-								controller.onCalculate(Operation.DIVIDE);
+								conductor.action("operation", Operation.DIVIDE);
 								break;
 							case '=':
-								controller.onCalculate(Operation.EQUAL);
+								conductor.action("operation", Operation.EQUAL);
 								break;
 							case 'C':
-								controller.clear();
+								conductor.action("clear"); 
 								break;
 							default:
 								break;
@@ -95,9 +91,9 @@ public class MvcCalculatorActivity extends RoboActivity implements
 
 		gridView.setAdapter(adapter);
 
-		controller.addCalculationChangeHandler(this);
+		conductor.addDataChangeHandler(this);
 
-		controller.clear();
+		conductor.action("clear"); 
 
 	}
 
@@ -108,6 +104,6 @@ public class MvcCalculatorActivity extends RoboActivity implements
 	protected void onStop() {
 		super.onStop();
 
-		controller.removeCalculationChangeHandler(this);
+		MvcEventConductor.getInstance().addDataChangeHandler(this);
 	}
 }

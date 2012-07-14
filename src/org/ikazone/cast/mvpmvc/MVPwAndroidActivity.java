@@ -1,6 +1,9 @@
 package org.ikazone.cast.mvpmvc;
 
+import javax.inject.Inject;
+
 import org.ikazone.cast.mvpmvc.mvc.MvcCalculatorActivity;
+import org.ikazone.cast.mvpmvc.mvc.controller.MvcCalculatorController;
 import org.ikazone.cast.mvpmvc.mvp.MvpCalculatorActivity;
 
 import roboguice.activity.RoboActivity;
@@ -17,6 +20,10 @@ import android.view.View;
  * code organized.
  */
 public class MVPwAndroidActivity extends RoboActivity {
+	
+	// This is not the right place for this!!!
+	@Inject
+	MvcCalculatorController c1;
 
 	/** Called when the activity is first created. */
 	@Override
